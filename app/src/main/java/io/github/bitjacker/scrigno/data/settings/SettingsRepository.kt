@@ -103,6 +103,7 @@ class SettingsRepository(context: Context) {
         return AppSettings(
             onboardingDone = prefs.getBoolean(K_ONBOARDING, defaults.onboardingDone),
             autoBackup = prefs.getBoolean(K_AUTO, defaults.autoBackup),
+            instantBackup = prefs.getBoolean(K_INSTANT, defaults.instantBackup),
             intervalHours = prefs.getInt(K_INTERVAL, defaults.intervalHours),
             preferredHour = prefs.getInt(K_HOUR, defaults.preferredHour),
             wifiOnly = prefs.getBoolean(K_WIFI, defaults.wifiOnly),
@@ -121,6 +122,7 @@ class SettingsRepository(context: Context) {
         prefs.edit()
             .putBoolean(K_ONBOARDING, s.onboardingDone)
             .putBoolean(K_AUTO, s.autoBackup)
+            .putBoolean(K_INSTANT, s.instantBackup)
             .putInt(K_INTERVAL, s.intervalHours)
             .putInt(K_HOUR, s.preferredHour)
             .putBoolean(K_WIFI, s.wifiOnly)
@@ -166,6 +168,7 @@ class SettingsRepository(context: Context) {
     private companion object {
         const val K_ONBOARDING = "onboarding_done"
         const val K_AUTO = "auto_backup"
+        const val K_INSTANT = "instant_backup"
         const val K_INTERVAL = "interval_hours"
         const val K_HOUR = "preferred_hour"
         const val K_WIFI = "wifi_only"

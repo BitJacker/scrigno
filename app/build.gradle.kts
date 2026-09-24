@@ -130,6 +130,7 @@ dependencies {
     testImplementation(libs.robolectric)
     testImplementation(libs.androidx.test.core)
     testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.androidx.work.testing)
 
     // Tests on a phone or emulator
     androidTestImplementation(libs.junit)

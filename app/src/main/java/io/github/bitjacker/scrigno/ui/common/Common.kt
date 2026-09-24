@@ -69,7 +69,9 @@ fun intervalLabel(hours: Int): String = when {
 
 @Composable
 fun scheduleSummary(settings: AppSettings): String {
-    val parts = mutableListOf(intervalLabel(settings.intervalHours))
+    val parts = mutableListOf<String>()
+    if (settings.instantBackup) parts += stringResource(R.string.schedule_instant)
+    parts += intervalLabel(settings.intervalHours)
     if (settings.intervalHours >= 24) parts += stringResource(R.string.schedule_at_hour, Formatters.hour(settings.preferredHour))
     parts += stringResource(if (settings.wifiOnly) R.string.schedule_wifi_only else R.string.schedule_any_network)
     if (settings.chargingOnly) parts += stringResource(R.string.schedule_charging)

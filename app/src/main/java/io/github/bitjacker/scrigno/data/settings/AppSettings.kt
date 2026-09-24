@@ -3,12 +3,15 @@ package io.github.bitjacker.scrigno.data.settings
 /**
  * User preferences. Stored only on this phone, never sent anywhere.
  *
+ * @property instantBackup besides the scheduled backup, back up new photos and videos about a
+ * minute after they are taken (part of the automatic backup: off when [autoBackup] is off).
  * @property keepOnDeviceDays photos older than this many days, already safe on the server, may be
  * removed from the phone to free up space. -1 means never; 0 means as soon as they are backed up.
  */
 data class AppSettings(
     val onboardingDone: Boolean = false,
     val autoBackup: Boolean = true,
+    val instantBackup: Boolean = true,
     val intervalHours: Int = 24,
     val preferredHour: Int = 2,
     val wifiOnly: Boolean = true,

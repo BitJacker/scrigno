@@ -46,8 +46,12 @@ class SettingsRepositoryTest {
 
     @Test
     fun settingsSurviveARestart() {
-        settings.update { it.copy(intervalHours = 12, preferredHour = 4, includeVideos = false, keepOnDeviceDays = 30) }
+        assertTrue("new photos are backed up right away by default", settings.settings.value.instantBackup)
+        settings.update {
+            it.copy(intervalHours = 12, preferredHour = 4, includeVideos = false, keepOnDeviceDays = 30, instantBackup = false)
+        }
         val reloaded = SettingsRepository(context).settings.value
+        assertFalse(reloaded.instantBackup)
         assertEquals(12, reloaded.intervalHours)
         assertEquals(4, reloaded.preferredHour)
         assertFalse(reloaded.includeVideos)

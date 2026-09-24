@@ -32,8 +32,10 @@ ma i file restano solo a casa tua.
   HTTPS o HTTP (Nextcloud, ownCloud, Synology, Apache, nginx…).
 - **Server raggiungibile con indirizzo IP o nome (FQDN)**, utente e password. Puoi anche incollare un URL completo,
   per esempio `sftp://nas.local:2222/srv/foto` o `https://cloud.example.com/remote.php/dav/files/mario`.
-- **Backup automatico** ogni 6/12 ore, ogni giorno, ogni 3 giorni o ogni settimana, all'orario che scegli
-  (di notte per impostazione predefinita), solo con Wi‑Fi e/o solo in carica. Oppure "Esegui backup ora".
+- **Backup automatico, senza aprire l'app**: le foto e i video nuovi vanno sul server da soli **poco dopo lo
+  scatto**, come con Google Foto. In più c'è un backup completo ogni 6/12 ore, ogni giorno, ogni 3 giorni o ogni
+  settimana, all'orario che scegli (di notte per impostazione predefinita), solo con Wi‑Fi e/o solo in carica.
+  Oppure "Esegui backup ora".
 - **Scelta delle cartelle** da salvare (Fotocamera, WhatsApp, Screenshot…), foto e, se vuoi, video.
 - **Libera spazio**: le foto già al sicuro sul server e più vecchie di N giorni (7, 30, 90, 365… o subito)
   vengono rimosse dal telefono **solo dopo aver verificato** che sul server il file sia completo. Nella galleria
@@ -127,8 +129,9 @@ Con il *Debug USB* attivo: `adb install -r Scrigno.apk`.
 4. Tocca **Prova connessione**: Scrigno accede, crea la cartella e scrive un file di prova. Alla prima connessione
    SFTP/TLS mostra l'**impronta del server**: se vuoi essere sicuro confrontala con quella del tuo server
    (per SSH: `ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub`). Poi **Salva**.
-5. Nella scheda **Backup** tocca **Esegui backup ora** per il primo backup. Da quel momento parte da solo
-   (di default ogni notte alle 02:00, solo con Wi‑Fi).
+5. Nella scheda **Backup** tocca **Esegui backup ora** per il primo backup. Da quel momento fa tutto da solo,
+   anche con l'app chiusa: ogni foto nuova va sul server poco dopo lo scatto, e ogni notte alle 02:00 c'è un
+   backup completo (di default solo con Wi‑Fi).
 6. Per **liberare spazio**: in *Backup* → *Tieni sul telefono* scegli per esempio *Gli ultimi 30 giorni*, poi
    **Libera spazio**. Android chiede conferma con la sua finestra di sistema. Le foto rimosse restano nella galleria
    con l'icona ☁️ e si scaricano quando le apri.
@@ -170,9 +173,10 @@ su HTTP e SMB **non** sono cifrati. Per FTPS con vsftpd imposta `require_ssl_reu
 - **"Server non trovato"**: controlla l'indirizzo; i nomi `.local` funzionano solo se la rete li supporta.
 - **"Nome utente o password errati"**: prova le stesse credenziali da un computer; per SMB prova a indicare il dominio
   o il gruppo di lavoro.
-- **Il backup automatico non parte**: Android rimanda i lavori in background; lascia il telefono in carica e sul
-  Wi‑Fi di notte, e togli Scrigno dall'ottimizzazione batteria se il produttore è aggressivo
-  (Xiaomi, Huawei, Samsung…).
+- **Il backup automatico non parte**: il momento esatto lo decide Android, che rimanda i lavori in background
+  quando la batteria è scarica o l'app non si usa da tempo (di solito le foto nuove partono entro pochi minuti,
+  se sei sul Wi‑Fi). Lascia il telefono in carica e sul Wi‑Fi di notte, e togli Scrigno dall'ottimizzazione
+  batteria se il produttore è aggressivo (Xiaomi, Huawei, Samsung…).
 - **"L'identità del server è cambiata"**: se hai reinstallato il server, apri *Il tuo server* e tocca
   *Dimenticala*; altrimenti **non** procedere.
 
@@ -202,7 +206,8 @@ I testi dell'interfaccia si modificano in [`scripts/generate_strings.py`](script
   — gli stessi test contro un tuo server qualsiasi (anche SMB, FTPS, WebDAVS).
 - `./gradlew :app:testDebugUnitTest` — logica dell'app (filtri, galleria, pianificazione).
 - `./gradlew :app:connectedDebugAndroidTest` — test sul telefono/emulatore: database, cifratura della password,
-  backup completo end-to-end verso un server, "libera spazio", interfaccia.
+  backup completo end-to-end verso un server con ogni protocollo, "libera spazio", interfaccia, e il **backup
+  automatico**: una foto nuova arriva sul server da sola, senza aprire l'app.
 
 La CI (GitHub Actions) esegue tutto a ogni push, compila gli APK e li pubblica nella release `nightly`.
 
@@ -228,8 +233,9 @@ your hands.
 - **Protocols**: SFTP (recommended), FTPS, FTP, SMB 2/3 (Windows shares, Samba, NAS), WebDAV over HTTPS or HTTP
   (Nextcloud, ownCloud, Synology, Apache, nginx…).
 - **Server by IP address or FQDN**, user name and password; full URLs can be pasted too.
-- **Automatic backup** every 6/12 hours, daily, every 3 days or weekly, at the time you choose, Wi‑Fi only and/or
-  while charging. Or tap "Back up now".
+- **Automatic backup, without opening the app**: new photos and videos go to the server by themselves **shortly
+  after you take them**, like with Google Photos, plus a full backup every 6/12 hours, daily, every 3 days or
+  weekly, at the time you choose, Wi‑Fi only and/or while charging. Or tap "Back up now".
 - **Folders** to back up, photos and optionally videos.
 - **Free up space**: backed up photos older than N days are removed from the phone **only after checking** the
   copy on the server. A light preview stays in the gallery and the original is downloaded when you open it.
@@ -269,7 +275,8 @@ holds the latest CI build).
 2. **Your server**: pick the protocol, type the IP address or name, port, user name, password, share (SMB) and
    folder → **Test connection** (Scrigno logs in, creates the folder and writes a test file; on the first SFTP/TLS
    connection it shows the server fingerprint) → **Save**.
-3. **Backup** tab → **Back up now**. From then on it runs by itself (default: every night at 02:00, Wi‑Fi only).
+3. **Backup** tab → **Back up now**. From then on it runs by itself, even with the app closed: every new photo
+   goes to the server shortly after you take it, plus a full backup every night at 02:00 (default: Wi‑Fi only).
 4. To **free up space** choose *Keep on the phone* (e.g. *The last 30 days*) and tap **Free up space**; Android
    asks for confirmation. Removed photos stay in the gallery with a ☁️ badge.
 
@@ -279,7 +286,7 @@ Files are stored as `<folder>/<phone name>/<year>/<month>/<file>`.
 
 ```sh
 ./gradlew :core:test :app:testDebugUnitTest      # unit tests, protocols against embedded servers
-./gradlew :app:connectedDebugAndroidTest         # on a device/emulator: end-to-end backup, free up space, UI
+./gradlew :app:connectedDebugAndroidTest         # on a device/emulator: automatic and end-to-end backup, free up space, UI
 ./gradlew :app:assembleRelease                   # APK
 ```
 

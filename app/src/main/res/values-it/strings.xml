@@ -113,7 +113,7 @@
     <string name="notification_backup_progress">%1$d di %2$d</string>
     <string name="notification_backup_title">Backup delle tue foto</string>
     <string name="notification_free_space_title">Puoi liberare spazio</string>
-    <string name="onboarding_backup_text">Backup automatico ogni notte e più spazio libero: le foto restano nella galleria e si scaricano quando le apri.</string>
+    <string name="onboarding_backup_text">Le foto nuove vanno da sole sul tuo server, subito dopo lo scatto e ogni notte. Più spazio libero: le foto restano nella galleria e si scaricano quando le apri.</string>
     <string name="onboarding_backup_title">Come i grandi cloud, ma tuo</string>
     <string name="onboarding_notifications_text">Le notifiche mostrano l\'avanzamento del backup e ti ricordano quando puoi liberare spazio.</string>
     <string name="onboarding_permission_granted">Accesso consentito</string>
@@ -130,6 +130,7 @@
     <string name="schedule_any_network">qualsiasi rete</string>
     <string name="schedule_at_hour">alle %1$s</string>
     <string name="schedule_charging">in carica</string>
+    <string name="schedule_instant">Foto nuove subito</string>
     <string name="schedule_wifi_only">solo Wi‑Fi</string>
     <string name="section_about">Informazioni</string>
     <string name="section_advanced">Avanzate</string>
@@ -177,6 +178,8 @@
     <string name="setting_folders_all">Tutte le cartelle</string>
     <string name="setting_hour">Orario preferito</string>
     <string name="setting_hour_not_used">Usato per i backup giornalieri o settimanali</string>
+    <string name="setting_instant">Salva subito le foto nuove</string>
+    <string name="setting_instant_summary">Poco dopo lo scatto di una foto o di un video, oltre al backup programmato</string>
     <string name="setting_interval">Frequenza</string>
     <string name="setting_keep_on_phone">Tieni sul telefono</string>
     <string name="setting_rebuild">Ricostruisci l\'elenco dal server</string>
@@ -193,6 +196,7 @@
     <string name="tab_backup">Backup</string>
     <string name="tab_photos">Foto</string>
     <string name="tab_settings">Impostazioni</string>
+    <string name="time_just_now">adesso</string>
     <string name="viewer_delete">Elimina</string>
     <string name="viewer_delete_everywhere">Elimina ovunque</string>
     <string name="viewer_delete_from_server">Elimina dal server</string>

@@ -8,11 +8,14 @@ import io.github.bitjacker.scrigno.core.backup.Uploader
 import io.github.bitjacker.scrigno.core.remote.AuthenticationException
 import io.github.bitjacker.scrigno.core.remote.LocalReadException
 import io.github.bitjacker.scrigno.core.remote.RemoteStorageFactory
+import io.github.bitjacker.scrigno.core.remote.ServerConfig
 import io.github.bitjacker.scrigno.core.remote.ServerIdentityChangedException
 import io.github.bitjacker.scrigno.core.remote.UntrustedCertificateException
 import io.github.bitjacker.scrigno.data.db.NewBackup
+import io.github.bitjacker.scrigno.data.media.DeviceMedia
 import io.github.bitjacker.scrigno.data.media.MediaAccess
 import io.github.bitjacker.scrigno.data.media.MediaPermissions
+import io.github.bitjacker.scrigno.data.settings.AppSettings
 import io.github.bitjacker.scrigno.data.settings.LastBackup
 import io.github.bitjacker.scrigno.util.ErrorMessages
 import kotlinx.coroutines.CancellationException
@@ -35,10 +38,12 @@ class BackupEngine(private val c: AppContainer) {
         /** The error will not go away by retrying (wrong password, changed server identity...). */
         val permanent: Boolean = false,
         val skipped: Boolean = false,
+        /** Skipped because another backup was already running. */
+        val busy: Boolean = false,
     )
 
     suspend fun run(isStopped: () -> Boolean): Outcome = withContext(Dispatchers.IO) {
-        if (!LOCK.tryLock()) return@withContext Outcome(skipped = true) // another backup is running
+        if (!LOCK.tryLock()) return@withContext Outcome(skipped = true, busy = true)
         c.backupStatus.clearStop()
         try {
             val outcome = doRun(isStopped)
@@ -76,15 +81,7 @@ class BackupEngine(private val c: AppContainer) {
         }
 
         val identity = server.identity()
-        val refs = device.map { MediaRef(it.id, it.size, it.dateTaken, it.bucketId, it.isVideo) }
-        val pendingIds = BackupPlanner.pending(
-            media = refs,
-            alreadyBackedUp = c.database.backedUpMediaIds(identity),
-            selectedBuckets = if (settings.allFolders) null else settings.selectedFolders,
-            includeVideos = settings.includeVideos,
-        ).map { it.id }
-        val byId = device.associateBy { it.id }
-        val pending = pendingIds.mapNotNull { byId[it] }
+        val pending = pendingFiles(device, settings, server)
         if (pending.isEmpty()) return Outcome()
 
         val bytesTotal = pending.sumOf { it.size }
@@ -175,12 +172,35 @@ class BackupEngine(private val c: AppContainer) {
         return Outcome(uploaded, alreadyThere, failed, bytesDone, error, error != null && isPermanent(error))
     }
 
+    /** A quick look that changes nothing and does not connect: is there anything to upload? */
+    fun hasPending(): Boolean {
+        val server = c.settings.server.value ?: return false
+        if (MediaPermissions.access(c.context) == MediaAccess.NONE) return false
+        return pendingFiles(c.mediaStore.query(includeVideos = true), c.settings.settings.value, server).isNotEmpty()
+    }
+
+    /** The files of [device] still to upload to [server], newest first. */
+    private fun pendingFiles(device: List<DeviceMedia>, settings: AppSettings, server: ServerConfig): List<DeviceMedia> {
+        val refs = device.map { MediaRef(it.id, it.size, it.dateTaken, it.bucketId, it.isVideo) }
+        val pendingIds = BackupPlanner.pending(
+            media = refs,
+            alreadyBackedUp = c.database.backedUpMediaIds(server.identity()),
+            selectedBuckets = if (settings.allFolders) null else settings.selectedFolders,
+            includeVideos = settings.includeVideos,
+        ).map { it.id }
+        val byId = device.associateBy { it.id }
+        return pendingIds.mapNotNull { byId[it] }
+    }
+
     private fun isPermanent(e: Throwable) = e is AuthenticationException ||
         e is ServerIdentityChangedException ||
         e is UntrustedCertificateException ||
         e is SecurityException
 
-    private companion object {
-        val LOCK = Mutex()
+    companion object {
+        private val LOCK = Mutex()
+
+        /** True while a backup runs, started by the app or in the background. */
+        val isRunning: Boolean get() = LOCK.isLocked
     }
 }

@@ -171,8 +171,10 @@ S = {
     "notification_free_space_title": ("You can free up space", "Puoi liberare spazio"),
     # Onboarding
     "onboarding_backup_text": (
-        "Automatic backup every night and more free space: photos stay in your gallery and are downloaded when you open them.",
-        "Backup automatico ogni notte e più spazio libero: le foto restano nella galleria e si scaricano quando le apri."),
+        "New photos go to your server by themselves, right after you take them and every night. More free space: "
+        "photos stay in your gallery and are downloaded when you open them.",
+        "Le foto nuove vanno da sole sul tuo server, subito dopo lo scatto e ogni notte. Più spazio libero: "
+        "le foto restano nella galleria e si scaricano quando le apri."),
     "onboarding_backup_title": ("Like the big clouds, but yours", "Come i grandi cloud, ma tuo"),
     "onboarding_notifications_text": (
         "Notifications show the backup progress and remind you when you can free up space.",
@@ -201,6 +203,7 @@ S = {
     "schedule_any_network": ("any network", "qualsiasi rete"),
     "schedule_at_hour": ("at %1$s", "alle %1$s"),
     "schedule_charging": ("while charging", "in carica"),
+    "schedule_instant": ("New photos right away", "Foto nuove subito"),
     "schedule_wifi_only": ("Wi‑Fi only", "solo Wi‑Fi"),
     # Settings sections
     "section_about": ("About", "Informazioni"),
@@ -262,6 +265,9 @@ S = {
     "setting_folders": ("Folders to back up", "Cartelle da salvare"),
     "setting_folders_all": ("All folders", "Tutte le cartelle"),
     "setting_hour": ("Preferred time", "Orario preferito"),
+    "setting_instant": ("Back up new photos right away", "Salva subito le foto nuove"),
+    "setting_instant_summary": ("Shortly after you take a photo or a video, besides the scheduled backup",
+                                "Poco dopo lo scatto di una foto o di un video, oltre al backup programmato"),
     "setting_hour_not_used": ("Used for daily or weekly backups", "Usato per i backup giornalieri o settimanali"),
     "setting_interval": ("Frequency", "Frequenza"),
     "setting_keep_on_phone": ("Keep on the phone", "Tieni sul telefono"),
@@ -279,6 +285,8 @@ S = {
     "setting_wifi_only": ("Only on Wi‑Fi", "Solo con Wi‑Fi"),
     "setting_wifi_only_summary": ("Do not use mobile data for the automatic backup",
                                   "Non usare i dati mobili per il backup automatico"),
+    # Time
+    "time_just_now": ("just now", "adesso"),
     # Viewer
     "viewer_delete": ("Delete", "Elimina"),
     "viewer_delete_everywhere": ("Delete everywhere", "Elimina ovunque"),

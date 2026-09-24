@@ -4,8 +4,10 @@ import android.Manifest
 import android.os.Build
 import android.util.Base64
 import androidx.test.platform.app.InstrumentationRegistry
+import io.github.bitjacker.scrigno.backup.BackupEngine
 import io.github.bitjacker.scrigno.core.remote.Protocol
 import io.github.bitjacker.scrigno.core.remote.ServerConfig
+import kotlinx.coroutines.delay
 
 /**
  * The servers to test against, passed by the CI as the instrumentation argument "scrignoServers":
@@ -51,7 +53,10 @@ object TestPermissions {
 /** Starts from a clean app: no server, no settings, empty index and caches. */
 suspend fun resetApp(context: android.content.Context) {
     val c = context.container
-    c.scheduler.cancelAll()
+    c.scheduler.cancelAll().result.get()
+    // A backup running in the background finishes the file it is sending, then stops.
+    val deadline = System.currentTimeMillis() + 60_000
+    while (BackupEngine.isRunning && System.currentTimeMillis() < deadline) delay(200)
     c.database.clear()
     c.thumbnails.clear()
     c.originals.clearCache()

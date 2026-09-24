@@ -1,8 +1,9 @@
 package io.github.bitjacker.scrigno.ui.settings
 
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -58,7 +59,7 @@ import io.github.bitjacker.scrigno.R
 import io.github.bitjacker.scrigno.core.remote.Protocol
 import io.github.bitjacker.scrigno.ui.common.protocolName
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun ServerScreen(
     onboarding: Boolean,
@@ -99,10 +100,8 @@ fun ServerScreen(
             }
 
             Text(stringResource(R.string.server_protocol), style = MaterialTheme.typography.labelLarge)
-            Row(
-                Modifier.horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
+            // All the protocols at a glance, on as many lines as the screen needs.
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Protocol.entries.forEach { protocol ->
                     FilterChip(
                         selected = form.protocol == protocol,

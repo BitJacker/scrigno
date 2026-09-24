@@ -8,15 +8,23 @@ import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
 import io.github.bitjacker.scrigno.container
 import io.github.bitjacker.scrigno.data.settings.AppSettings
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
-/** Runs a backup, either scheduled (every night) or requested with "Back up now". */
+/** Runs a backup: scheduled (every night), after new photos, or requested with "Back up now". */
 class BackupWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
 
     override suspend fun doWork(): Result {
         val c = applicationContext.container
         val manual = inputData.getBoolean(KEY_MANUAL, false)
+        val instant = inputData.getBoolean(KEY_INSTANT, false)
+        val engine = BackupEngine(c)
+
+        // Also woken up by photos in folders that are not backed up, or by deletions: often there
+        // is nothing to do, and then no notification should flash.
+        if (instant && !withContext(Dispatchers.IO) { engine.hasPending() }) return Result.success()
 
         // Show the progress as a foreground notification when Android allows it; otherwise the
         // backup still runs in the background (and simply continues next time if it is stopped).
@@ -35,26 +43,33 @@ class BackupWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                 }
             }
             try {
-                BackupEngine(c).run(isStopped = { isStopped })
+                engine.run(isStopped = { isStopped })
             } finally {
                 progress.cancel()
                 Notifications.cancel(applicationContext, Notifications.ID_PROGRESS)
             }
         }
 
+        // Another backup was running: it may have looked before the newest photos existed.
+        if (outcome.busy && instant) return Result.retry()
         if (outcome.skipped) return Result.success()
 
         val error = outcome.error
-        if (error != null && (outcome.permanent || manual || outcome.uploaded + outcome.alreadyThere == 0)) {
+        val madeProgress = outcome.uploaded + outcome.alreadyThere > 0
+        if (error == null) {
+            Notifications.cancel(applicationContext, Notifications.ID_ERROR)
+        } else if (outcome.permanent || manual || (!madeProgress && !instant)) {
             Notifications.backupFailed(applicationContext, error)
-        } else {
+        } else if (madeProgress) {
             Notifications.cancel(applicationContext, Notifications.ID_ERROR)
         }
+        // After new photos, a temporary problem (server switched off, away from home...) is not worth
+        // a notification: the backup is retried later, and the scheduled one reports it if it lasts.
         if (manual && error == null && outcome.uploaded > 0) {
             Notifications.backupDone(applicationContext, outcome.uploaded)
         }
 
-        remindToFreeSpace(c.settings.settings.value)
+        if (!instant) remindToFreeSpace(c.settings.settings.value)
 
         return when {
             error == null -> Result.success()
@@ -83,5 +98,6 @@ class BackupWorker(context: Context, params: WorkerParameters) : CoroutineWorker
 
     companion object {
         const val KEY_MANUAL = "manual"
+        const val KEY_INSTANT = "instant"
     }
 }

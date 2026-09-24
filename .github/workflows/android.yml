@@ -135,7 +135,7 @@ jobs:
           ./gradlew --stop
           pkill -f KotlinCompileDaemon || true
 
-      - name: Backup, free up space, restore and first-launch UI tests on Android 14
+      - name: Automatic backup, free up space, restore and first-launch UI tests on Android 14
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 34
@@ -146,7 +146,10 @@ jobs:
           ram-size: 2048M
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none -camera-front none
-          script: ./gradlew --stacktrace :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.scrignoServers=$(scripts/ci/emulator-servers.sh)
+          # The CI emulator is slow: no "System UI isn't responding" dialog over the screenshots.
+          script: |
+            adb shell settings put global hide_error_dialogs 1
+            ./gradlew --stacktrace :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.scrignoServers=$(scripts/ci/emulator-servers.sh)
 
       - uses: actions/upload-artifact@v4
         if: always()

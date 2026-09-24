@@ -21,6 +21,7 @@ import androidx.compose.material.icons.outlined.Folder
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.NotificationsActive
+import androidx.compose.material.icons.outlined.PhotoCamera
 import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material.icons.outlined.SdStorage
 import androidx.compose.material.icons.outlined.Sync
@@ -115,6 +116,14 @@ fun SettingsScreen(
                 summary = stringResource(R.string.setting_auto_backup_summary),
                 checked = settings.autoBackup,
                 onChange = { value -> viewModel.update(reschedule = true) { it.copy(autoBackup = value) } },
+            )
+            SwitchItem(
+                icon = Icons.Outlined.PhotoCamera,
+                title = stringResource(R.string.setting_instant),
+                summary = stringResource(R.string.setting_instant_summary),
+                checked = settings.instantBackup,
+                enabled = settings.autoBackup,
+                onChange = { value -> viewModel.update(reschedule = true) { it.copy(instantBackup = value) } },
             )
             Item(
                 icon = Icons.Outlined.Timer,

@@ -3,6 +3,7 @@ package io.github.bitjacker.scrigno.util
 import android.content.Context
 import android.text.format.DateUtils
 import android.text.format.Formatter
+import io.github.bitjacker.scrigno.R
 import java.time.Instant
 import java.time.YearMonth
 import java.time.ZoneId
@@ -24,15 +25,19 @@ object Formatters {
             .withLocale(Locale.getDefault())
             .format(Instant.ofEpochMilli(epochMillis).atZone(ZoneId.systemDefault()))
 
-    /** "yesterday, 02:14", "3 days ago"... */
-    fun relative(context: Context, epochMillis: Long): String =
-        DateUtils.getRelativeDateTimeString(
-            context,
-            epochMillis,
-            DateUtils.MINUTE_IN_MILLIS,
-            DateUtils.WEEK_IN_MILLIS,
-            DateUtils.FORMAT_SHOW_TIME,
-        ).toString()
+    /** "just now", "5 minutes ago, 09:51", "yesterday, 02:14"... */
+    fun relative(context: Context, epochMillis: Long, now: Long = System.currentTimeMillis()): String =
+        if (now - epochMillis in 0 until DateUtils.MINUTE_IN_MILLIS) {
+            context.getString(R.string.time_just_now) // rather than "0 minutes ago"
+        } else {
+            DateUtils.getRelativeDateTimeString(
+                context,
+                epochMillis,
+                DateUtils.MINUTE_IN_MILLIS,
+                DateUtils.WEEK_IN_MILLIS,
+                DateUtils.FORMAT_SHOW_TIME,
+            ).toString()
+        }
 
     fun yearMonth(epochMillis: Long): YearMonth = YearMonth.from(Instant.ofEpochMilli(epochMillis).atZone(ZoneId.systemDefault()))
 
