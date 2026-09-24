@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Notification icon: the chest in a single color, with the keyhole cut out. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M4,10.5 L4,8 C4,6.3 5.3,5 7,5 L17,5 C18.7,5 20,6.3 20,8 L20,10.5 Z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:fillType="evenOdd"
+        android:pathData="M4,12 L20,12 L20,18 C20,19.1 19.1,20 18,20 L6,20 C4.9,20 4,19.1 4,18 Z M12,13.6 C11.2,13.6 10.6,14.2 10.6,15 C10.6,15.5 10.9,16 11.3,16.2 L11,18 L13,18 L12.7,16.2 C13.1,16 13.4,15.5 13.4,15 C13.4,14.2 12.8,13.6 12,13.6 Z" />
+</vector>

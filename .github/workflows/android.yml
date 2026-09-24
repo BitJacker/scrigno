@@ -1,0 +1,80 @@
+name: Android
+
+on:
+  push:
+    branches: ["**"]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build and unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Unit tests (protocols against embedded FTP/SFTP/WebDAV servers, app logic)
+        run: ./gradlew --stacktrace :core:test :app:testDebugUnitTest
+
+      - name: Build the APKs
+        env:
+          SCRIGNO_KEYSTORE_BASE64: ${{ secrets.SCRIGNO_KEYSTORE_BASE64 }}
+          SCRIGNO_KEYSTORE_PASSWORD: ${{ secrets.SCRIGNO_KEYSTORE_PASSWORD }}
+          SCRIGNO_KEY_ALIAS: ${{ secrets.SCRIGNO_KEY_ALIAS }}
+          SCRIGNO_KEY_PASSWORD: ${{ secrets.SCRIGNO_KEY_PASSWORD }}
+        run: |
+          if [ -n "$SCRIGNO_KEYSTORE_BASE64" ]; then
+            echo "$SCRIGNO_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.keystore"
+            export SCRIGNO_KEYSTORE="$RUNNER_TEMP/release.keystore"
+            echo "Signing the release with your key."
+          else
+            echo "::notice::No SCRIGNO_KEYSTORE_BASE64 secret: the release APK is signed with the public development key."
+          fi
+          ./gradlew --stacktrace :app:assembleRelease :app:assembleDebug
+          mkdir -p dist
+          cp app/build/outputs/apk/release/app-release.apk dist/Scrigno.apk
+          cp app/build/outputs/apk/debug/app-debug.apk dist/Scrigno-debug.apk
+          (cd dist && sha256sum *.apk > SHA256SUMS.txt && cat SHA256SUMS.txt)
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Scrigno-apk
+          path: dist/
+          if-no-files-found: error
+
+      - name: Publish the "nightly" release (latest build of the default branch)
+        if: github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete nightly --yes --cleanup-tag || true
+          gh release create nightly dist/Scrigno.apk dist/Scrigno-debug.apk dist/SHA256SUMS.txt \
+            --prerelease \
+            --target "$GITHUB_SHA" \
+            --title "Scrigno – latest build" \
+            --notes "Automatic build of ${GITHUB_SHA::7}. Install **Scrigno.apk** (see the README for instructions, also from Termux)."
+
+      - name: Publish the versioned release
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" dist/Scrigno.apk dist/SHA256SUMS.txt \
+            --title "Scrigno $GITHUB_REF_NAME" \
+            --generate-notes

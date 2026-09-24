@@ -1,0 +1,23 @@
+# Gradle / Android Studio
+.gradle/
+build/
+/local.properties
+/.idea/
+*.iml
+.kotlin/
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Build outputs
+*.apk
+*.aab
+/dist/
+
+# Signing keys: never commit a release key (the public development key app/debug.keystore is fine)
+*.jks
+release.keystore
+
+# OS
+.DS_Store
+Thumbs.db
