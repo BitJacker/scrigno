@@ -16,7 +16,6 @@ import org.apache.commons.net.ftp.FTP
 import org.apache.commons.net.ftp.FTPClient
 import org.apache.commons.net.ftp.FTPFile
 import org.apache.commons.net.ftp.FTPReply
-import org.apache.commons.net.ftp.FTPSClient
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
@@ -42,14 +41,30 @@ class FtpStorage(
     override val isConnected: Boolean
         get() = client?.isConnected == true
 
+    /** TLS version of the last data connection (FTPS only). */
+    internal val dataTlsVersion: String?
+        get() = (client as? ScrignoFtpsClient)?.dataTlsVersion
+
     override fun connect() {
         close()
+        if (config.protocol != Protocol.FTPS) return open(tls12 = false)
+        try {
+            open(tls12 = true)
+        } catch (e: SSLException) {
+            // The server refuses TLS 1.2 (TLS 1.3 only, or no cipher in common): let it choose.
+            open(tls12 = false)
+        }
+    }
+
+    private fun open(tls12: Boolean) {
         val ftp: FTPClient = if (config.protocol == Protocol.FTPS) {
             val tm = PinningTrustManager(config.trustedFingerprint, config.allowSelfSigned)
             trustManager = tm
-            FTPSClient("TLS", false).apply {
+            ScrignoFtpsClient().apply {
                 setTrustManager(tm)
                 hostnameVerifier = tm.hostnameVerifier(OkHostnameVerifier)
+                // Uploads end cleanly with TLS 1.2: see ScrignoFtpsClient.
+                if (tls12) setEnabledProtocols(arrayOf("TLSv1.2"))
             }
         } else {
             trustManager = null
@@ -65,7 +80,7 @@ class FtpStorage(
             if (!FTPReply.isPositiveCompletion(ftp.replyCode)) {
                 throw RemoteException("The FTP server refused the connection: ${ftp.replyString.trim()}")
             }
-            if (ftp is FTPSClient) {
+            if (ftp is ScrignoFtpsClient) {
                 ftp.execPBSZ(0)
                 ftp.execPROT("P")
             }
@@ -150,7 +165,11 @@ class FtpStorage(
     override fun upload(path: String, input: InputStream, length: Long, modifiedMillis: Long?, onProgress: (Long) -> Unit) {
         val ftp = ftp()
         val out = ftp.storeFileStream(resolve(path)) ?: throw RemoteException("Upload refused: ${reply()}")
-        out.use { Streams.copy(input, it, onProgress) }
+        out.use {
+            Streams.copy(input, it, onProgress)
+            it.flush()
+            (ftp as? ScrignoFtpsClient)?.finishUpload()
+        }
         if (!ftp.completePendingCommand()) throw RemoteException("Upload failed: ${reply()}")
     }
 
