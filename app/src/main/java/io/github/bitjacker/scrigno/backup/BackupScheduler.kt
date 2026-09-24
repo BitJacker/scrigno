@@ -85,13 +85,16 @@ class BackupScheduler(private val context: Context) {
             WorkInfo.State.BLOCKED !in states -> ExistingWorkPolicy.APPEND_OR_REPLACE
             else -> return // that second run is already queued
         }
-        val request = OneTimeWorkRequestBuilder<BackupWorker>()
-            .setConstraints(constraints(settings))
-            .setInputData(workDataOf(BackupWorker.KEY_INSTANT to true))
-            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 1, TimeUnit.MINUTES)
-            .addTag(TAG)
-            .build()
-        workManager.enqueueUniqueWork(NEW_MEDIA_BACKUP, policy, request)
+        workManager.enqueueUniqueWork(NEW_MEDIA_BACKUP, policy, automaticBackup(settings))
+    }
+
+    /**
+     * Right after the setup: backs up what is already on the phone without waiting for the night,
+     * as soon as the network (Wi‑Fi by default) and the battery allow it.
+     */
+    fun startFirstBackup(settings: AppSettings, server: ServerConfig?) {
+        if (!settings.autoBackup || server == null) return
+        workManager.enqueueUniqueWork(NEW_MEDIA_BACKUP, ExistingWorkPolicy.KEEP, automaticBackup(settings))
     }
 
     /** Waits for the next new photo; called by [NewMediaWorker], so it starts once that one ends. */
@@ -120,6 +123,14 @@ class BackupScheduler(private val context: Context) {
         workManager.cancelUniqueWork(NEW_MEDIA)
         workManager.cancelUniqueWork(NEW_MEDIA_BACKUP)
     }
+
+    /** A backup the user did not ask for right now: it follows the network and battery settings. */
+    private fun automaticBackup(settings: AppSettings) = OneTimeWorkRequestBuilder<BackupWorker>()
+        .setConstraints(constraints(settings))
+        .setInputData(workDataOf(BackupWorker.KEY_INSTANT to true))
+        .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 1, TimeUnit.MINUTES)
+        .addTag(TAG)
+        .build()
 
     private fun constraints(settings: AppSettings) = Constraints.Builder()
         .setRequiredNetworkType(if (settings.wifiOnly) NetworkType.UNMETERED else NetworkType.CONNECTED)

@@ -129,9 +129,10 @@ Con il *Debug USB* attivo: `adb install -r Scrigno.apk`.
 4. Tocca **Prova connessione**: Scrigno accede, crea la cartella e scrive un file di prova. Alla prima connessione
    SFTP/TLS mostra l'**impronta del server**: se vuoi essere sicuro confrontala con quella del tuo server
    (per SSH: `ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub`). Poi **Salva**.
-5. Nella scheda **Backup** tocca **Esegui backup ora** per il primo backup. Da quel momento fa tutto da solo,
-   anche con l'app chiusa: ogni foto nuova va sul server poco dopo lo scatto, e ogni notte alle 02:00 c'è un
-   backup completo (di default solo con Wi‑Fi).
+5. Fatto: il **primo backup parte da solo** appena salvi il server (con il Wi‑Fi, se non hai cambiato
+   l'impostazione) e lo vedi avanzare nella scheda **Backup**. Da quel momento fa tutto da solo, anche con l'app
+   chiusa: ogni foto nuova va sul server poco dopo lo scatto, e ogni notte alle 02:00 c'è un backup completo.
+   Per partire subito anche con i dati mobili tocca **Esegui backup ora**.
 6. Per **liberare spazio**: in *Backup* → *Tieni sul telefono* scegli per esempio *Gli ultimi 30 giorni*, poi
    **Libera spazio**. Android chiede conferma con la sua finestra di sistema. Le foto rimosse restano nella galleria
    con l'icona ☁️ e si scaricano quando le apri.
@@ -275,8 +276,10 @@ holds the latest CI build).
 2. **Your server**: pick the protocol, type the IP address or name, port, user name, password, share (SMB) and
    folder → **Test connection** (Scrigno logs in, creates the folder and writes a test file; on the first SFTP/TLS
    connection it shows the server fingerprint) → **Save**.
-3. **Backup** tab → **Back up now**. From then on it runs by itself, even with the app closed: every new photo
-   goes to the server shortly after you take it, plus a full backup every night at 02:00 (default: Wi‑Fi only).
+3. That's it: the **first backup starts by itself** as soon as the server is saved (on Wi‑Fi by default) and you
+   can follow it in the **Backup** tab. From then on everything happens by itself, even with the app closed: every
+   new photo goes to the server shortly after you take it, plus a full backup every night at 02:00. **Back up now**
+   starts right away, on any network.
 4. To **free up space** choose *Keep on the phone* (e.g. *The last 30 days*) and tap **Free up space**; Android
    asks for confirmation. Removed photos stay in the gallery with a ☁️ badge.
 

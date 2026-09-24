@@ -59,6 +59,7 @@ fun ScrignoNavHost(requestedTab: StateFlow<String?>, onTabShown: () -> Unit) {
                     if (onboarding) {
                         container.settings.update { it.copy(onboardingDone = true) }
                         container.scheduler.apply(container.settings.settings.value, container.settings.server.value, replace = true)
+                        container.scheduler.startFirstBackup(container.settings.settings.value, container.settings.server.value)
                         galleryViewModel.refresh()
                         navController.navigate(Routes.HOME) {
                             popUpTo(navController.graph.id) { inclusive = true }

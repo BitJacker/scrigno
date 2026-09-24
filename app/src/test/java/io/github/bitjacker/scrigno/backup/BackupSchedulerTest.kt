@@ -91,6 +91,18 @@ class BackupSchedulerTest {
     }
 
     @Test
+    fun theFirstBackupStartsRightAfterTheSetupNotAtNight() {
+        scheduler.startFirstBackup(configured.copy(autoBackup = false), server)
+        scheduler.startFirstBackup(configured, null)
+        assertTrue(work(BackupScheduler.NEW_MEDIA_BACKUP).isEmpty())
+
+        scheduler.startFirstBackup(configured, server)
+        val first = waiting(BackupScheduler.NEW_MEDIA_BACKUP)
+        assertEquals(0L, first.initialDelayMillis)
+        assertEquals(NetworkType.UNMETERED, first.constraints.requiredNetworkType)
+    }
+
+    @Test
     fun aNewPhotoQueuesABackupAndTheWatchStartsAgain() {
         context.container.settings.saveServer(server)
         context.container.settings.update { it.copy(onboardingDone = true) }

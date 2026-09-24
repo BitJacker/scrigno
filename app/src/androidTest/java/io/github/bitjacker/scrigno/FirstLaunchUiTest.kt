@@ -14,6 +14,9 @@ import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.GrantPermissionRule
+import androidx.work.WorkInfo
+import androidx.work.WorkManager
+import io.github.bitjacker.scrigno.backup.BackupScheduler
 import io.github.bitjacker.scrigno.core.remote.Protocol
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
@@ -79,6 +82,11 @@ class FirstLaunchUiTest {
             assertEquals(server.host, saved.host)
             assertEquals(server.protocol, saved.protocol)
             assertTrue(context.container.settings.settings.value.onboardingDone)
+
+            // The automatic backup is on, and the first one started by itself.
+            val work = WorkManager.getInstance(context)
+            assertTrue(work.getWorkInfosForUniqueWork(BackupScheduler.NEW_MEDIA_BACKUP).get().isNotEmpty())
+            assertTrue(work.getWorkInfosForUniqueWork(BackupScheduler.NEW_MEDIA).get().any { it.state == WorkInfo.State.ENQUEUED })
         }
     }
 }
