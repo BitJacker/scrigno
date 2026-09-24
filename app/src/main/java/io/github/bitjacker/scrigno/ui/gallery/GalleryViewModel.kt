@@ -69,6 +69,22 @@ data class GalleryState(
     val entries: List<GridEntry> = emptyList(),
 )
 
+/** Filters the timeline and inserts a title before the first photo of each month. */
+internal fun buildGalleryState(library: Library, filter: GalleryFilter): GalleryState {
+    val items = library.items.filter(filter::matches)
+    val entries = ArrayList<GridEntry>(items.size + 64)
+    var month: YearMonth? = null
+    for (item in items) {
+        val itemMonth = Formatters.yearMonth(item.dateTaken)
+        if (itemMonth != month) {
+            entries += GridEntry.Header(itemMonth)
+            month = itemMonth
+        }
+        entries += GridEntry.Photo(item)
+    }
+    return GalleryState(library, filter, items, entries)
+}
+
 sealed interface DownloadState {
     data class Loading(val progress: Float) : DownloadState
     data class Ready(val file: File) : DownloadState
@@ -80,7 +96,7 @@ class GalleryViewModel(application: Application) : AndroidViewModel(application)
     private val c = application.container
     private val filter = MutableStateFlow(GalleryFilter.ALL)
 
-    val state: StateFlow<GalleryState> = combine(c.library.library, filter) { library, selected -> build(library, selected) }
+    val state: StateFlow<GalleryState> = combine(c.library.library, filter) { library, selected -> buildGalleryState(library, selected) }
         .flowOn(Dispatchers.Default)
         .stateIn(viewModelScope, SharingStarted.Eagerly, GalleryState())
 
@@ -111,21 +127,6 @@ class GalleryViewModel(application: Application) : AndroidViewModel(application)
 
     fun setFilter(value: GalleryFilter) {
         filter.value = value
-    }
-
-    private fun build(library: Library, filter: GalleryFilter): GalleryState {
-        val items = library.items.filter(filter::matches)
-        val entries = ArrayList<GridEntry>(items.size + 64)
-        var month: YearMonth? = null
-        for (item in items) {
-            val itemMonth = Formatters.yearMonth(item.dateTaken)
-            if (itemMonth != month) {
-                entries += GridEntry.Header(itemMonth)
-                month = itemMonth
-            }
-            entries += GridEntry.Photo(item)
-        }
-        return GalleryState(library, filter, items, entries)
     }
 
     private fun say(@StringRes message: Int, vararg args: Any) {

@@ -18,8 +18,11 @@ class ScrignoApp : Application(), ImageLoaderFactory {
         super.onCreate()
         container = AppContainer(this)
         Notifications.createChannels(this)
-        // Make sure the nightly job matches the saved settings (e.g. after an update).
-        container.scheduler.apply(container.settings.settings.value, container.settings.server.value, replace = false)
+        // Make sure the nightly job matches the saved settings (e.g. after an update). Never let a
+        // scheduling problem prevent the app from opening.
+        runCatching {
+            container.scheduler.apply(container.settings.settings.value, container.settings.server.value, replace = false)
+        }
     }
 
     override fun newImageLoader(): ImageLoader = ImageLoader.Builder(this)
