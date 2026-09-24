@@ -146,12 +146,22 @@ class GalleryViewModel(application: Application) : AndroidViewModel(application)
         viewModelScope.launch {
             _downloads.update { it + (record.id to DownloadState.Loading(0f)) }
             try {
-                val file = c.originals.fetch(record) { progress ->
-                    _downloads.update { it + (record.id to DownloadState.Loading(progress)) }
-                }
+                val file = c.originals.fetch(record, progressUpdater(record.id))
                 _downloads.update { it + (record.id to DownloadState.Ready(file)) }
             } catch (e: Exception) {
                 _downloads.update { it + (record.id to DownloadState.Failed(ErrorMessages.describe(getApplication(), e))) }
+            }
+        }
+    }
+
+    /** Publishes the download progress at most once per percent, not for every network packet. */
+    private fun progressUpdater(recordId: Long): (Float) -> Unit {
+        var lastPercent = -1
+        return { progress ->
+            val percent = (progress * 100).toInt()
+            if (percent != lastPercent) {
+                lastPercent = percent
+                _downloads.update { it + (recordId to DownloadState.Loading(progress)) }
             }
         }
     }
@@ -168,9 +178,7 @@ class GalleryViewModel(application: Application) : AndroidViewModel(application)
         val record = item.record ?: return null
         return try {
             _busy.value = true
-            val file = c.originals.fetch(record) { progress ->
-                _downloads.update { it + (record.id to DownloadState.Loading(progress)) }
-            }
+            val file = c.originals.fetch(record, progressUpdater(record.id))
             _downloads.update { it + (record.id to DownloadState.Ready(file)) }
             val app = getApplication<Application>()
             FileProvider.getUriForFile(app, app.packageName + ".files", file)

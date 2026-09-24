@@ -92,14 +92,19 @@ class EndToEndBackupTest(private val case: Case) {
         assertEquals(0, outcome.failed)
         assertEquals(3, outcome.uploaded + outcome.alreadyThere)
 
-        // The files are on the server, complete, in <phone>/<year>/<month>/.
+        // The files are on the server, complete, in <phone>/<year>/<month>/<name>.
+        val ourIds = ours.map { it.id }.toSet()
+        val records = c.database.all().filter { record -> record.mediaId?.let { it in ourIds } == true }
+        assertEquals(3, records.size)
         RemoteStorageFactory.create(c.settings.server.value!!).use { storage ->
             storage.connect()
-            for (media in ours) {
-                val path = RemotePaths.join(deviceFolder, RemotePaths.monthFolder(media.dateTaken), media.name)
-                val remote = storage.stat(path)
-                assertNotNull("not on the server: $path", remote)
-                assertEquals(media.size, remote!!.size)
+            for (record in records) {
+                val expected = RemotePaths.join(deviceFolder, RemotePaths.monthFolder(record.dateTaken), record.name)
+                assertEquals(expected, record.remotePath)
+                val remote = storage.stat(record.remotePath)
+                assertNotNull("not on the server: ${record.remotePath}", remote)
+                assertEquals(record.size, remote!!.size)
+                assertEquals(ours.first { it.id == record.mediaId }.size, remote.size)
             }
         }
 

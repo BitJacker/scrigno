@@ -91,7 +91,11 @@ class ServerViewModel(application: Application) : AndroidViewModel(application) 
     val test: StateFlow<ConnectionTest> = _test.asStateFlow()
 
     fun edit(transform: (ServerForm) -> ServerForm) {
-        _form.update(transform)
+        _form.update { old ->
+            val new = transform(old)
+            // Another address means another server: its identity must be learned again.
+            if (new.host.trim() != old.host.trim() || new.port != old.port) new.copy(fingerprint = "") else new
+        }
         _test.value = ConnectionTest.Idle
     }
 

@@ -27,15 +27,22 @@ object MediaPermissions {
     fun notificationPermission(): String? =
         if (Build.VERSION.SDK_INT >= 33) Manifest.permission.POST_NOTIFICATIONS else null
 
-    fun access(context: Context): MediaAccess = when {
-        Build.VERSION.SDK_INT >= 33 &&
-            (granted(context, Manifest.permission.READ_MEDIA_IMAGES) || granted(context, Manifest.permission.READ_MEDIA_VIDEO)) ->
-            MediaAccess.FULL
-        Build.VERSION.SDK_INT >= 34 && granted(context, Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED) ->
-            MediaAccess.PARTIAL
-        Build.VERSION.SDK_INT < 33 && granted(context, Manifest.permission.READ_EXTERNAL_STORAGE) ->
-            MediaAccess.FULL
-        else -> MediaAccess.NONE
+    /**
+     * FULL only when every photo and video is visible: the app then knows that a photo it cannot see
+     * any more was really deleted. Photos without videos (or the reverse) count as PARTIAL.
+     */
+    fun access(context: Context): MediaAccess {
+        if (Build.VERSION.SDK_INT < 33) {
+            return if (granted(context, Manifest.permission.READ_EXTERNAL_STORAGE)) MediaAccess.FULL else MediaAccess.NONE
+        }
+        val images = granted(context, Manifest.permission.READ_MEDIA_IMAGES)
+        val videos = granted(context, Manifest.permission.READ_MEDIA_VIDEO)
+        return when {
+            images && videos -> MediaAccess.FULL
+            images || videos -> MediaAccess.PARTIAL
+            Build.VERSION.SDK_INT >= 34 && granted(context, Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED) -> MediaAccess.PARTIAL
+            else -> MediaAccess.NONE
+        }
     }
 
     fun hasMediaLocation(context: Context): Boolean =
