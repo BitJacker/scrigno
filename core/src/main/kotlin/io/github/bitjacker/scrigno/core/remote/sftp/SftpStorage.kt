@@ -60,7 +60,7 @@ class SftpStorage(
             val changed = hostKeys.mismatch
             if (changed != null) throw ServerIdentityChangedException(config.trustedFingerprint, changed, e)
             val message = e.message.orEmpty()
-            if (message.contains("Auth fail", ignoreCase = true) || message.contains("Auth cancel", ignoreCase = true)) {
+            if (AUTH_FAILURES.any { message.contains(it, ignoreCase = true) }) {
                 throw AuthenticationException("Login refused by the SSH server", e)
             }
             throw RemoteException(message.ifEmpty { "SSH connection failed" }, e)
@@ -174,6 +174,10 @@ class SftpStorage(
         session = null
     }
 
+    private companion object {
+        val AUTH_FAILURES = listOf("Auth fail", "Auth cancel", "Too many authentication failures")
+    }
+
     private class ProgressMonitor(private val onProgress: (Long) -> Unit) : SftpProgressMonitor {
         private var transferred = 0L
         override fun init(op: Int, src: String?, dest: String?, max: Long) {}
@@ -185,10 +189,18 @@ class SftpStorage(
         override fun end() {}
     }
 
+    /**
+     * Gives the password once per authentication method and never retries it: a wrong password
+     * must fail fast instead of hitting the server's "too many authentication failures" limit.
+     */
     private class PasswordUserInfo(private val password: String) : UserInfo, UIKeyboardInteractive {
+        private var keyboardInteractiveAnswered = false
+
         override fun getPassphrase(): String? = null
         override fun getPassword(): String = password
-        override fun promptPassword(message: String?): Boolean = true
+
+        // The password was already handed to the session: do not ask again after a failure.
+        override fun promptPassword(message: String?): Boolean = false
         override fun promptPassphrase(message: String?): Boolean = false
         override fun promptYesNo(message: String?): Boolean = false
         override fun showMessage(message: String?) {}
@@ -198,7 +210,11 @@ class SftpStorage(
             instruction: String?,
             prompt: Array<out String>?,
             echo: BooleanArray?,
-        ): Array<String> = Array(prompt?.size ?: 0) { password }
+        ): Array<String>? {
+            if (keyboardInteractiveAnswered) return null
+            keyboardInteractiveAnswered = true
+            return Array(prompt?.size ?: 0) { password }
+        }
     }
 }
 

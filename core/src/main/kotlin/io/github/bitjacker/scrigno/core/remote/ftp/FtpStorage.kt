@@ -76,6 +76,9 @@ class FtpStorage(
             )
             if (!loggedIn) throw AuthenticationException("Login refused: ${ftp.replyString.trim()}")
             ftp.enterLocalPassiveMode()
+            // EPSV answers with a port only: the data connection goes to the same address as the
+            // control one, so it works behind NAT (home routers, Android emulator). Falls back to PASV.
+            ftp.setUseEPSVwithIPv4(true)
             if (!ftp.setFileType(FTP.BINARY_FILE_TYPE)) {
                 throw RemoteException("Binary mode refused: ${ftp.replyString.trim()}")
             }
