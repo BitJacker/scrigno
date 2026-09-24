@@ -31,6 +31,9 @@ object TestImages {
         ExifInterface(file.absolutePath).apply {
             setAttribute(ExifInterface.TAG_DATETIME_ORIGINAL, exifDate)
             setAttribute(ExifInterface.TAG_DATETIME, exifDate)
+            // With the time zone, as cameras write it: Android then takes the date from EXIF.
+            setAttribute(ExifInterface.TAG_OFFSET_TIME_ORIGINAL, "+00:00")
+            setAttribute(ExifInterface.TAG_OFFSET_TIME, "+00:00")
             saveAttributes()
         }
         val bytes = file.readBytes()

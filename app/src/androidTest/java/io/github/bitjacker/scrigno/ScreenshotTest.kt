@@ -57,7 +57,7 @@ class ScreenshotTest {
 
     private fun shot(name: String) {
         compose.waitForIdle()
-        Thread.sleep(700) // let images fade in
+        Thread.sleep(2_000) // let the thumbnails load and fade in (the CI emulator is slow)
         val dir = outputDir ?: return
         dir.mkdirs()
         val bitmap: Bitmap = instrumentation.uiAutomation.takeScreenshot() ?: return
